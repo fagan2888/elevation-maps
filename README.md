@@ -12,3 +12,8 @@ Required Python libraries:
 * **numpy** (array manipulation)
 * **pandas** (data manipulation)
 * **urllib2** (download from http)
+
+Using
+----
+Just run `elevation-maps.py`. Depending on the input address, the elevation API
+request may be too long--this needs to be changed.
