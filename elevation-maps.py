@@ -1,38 +1,40 @@
 # m henry linder, 11/3/13
 # run api request to google maps
 import json, urllib2
+from pandas import DataFrame
 import numpy as np
-import datetime
 
-def elevation_increase(locations, output, sensor):
+def elevation_request(locations, output, sensor):
     # submit elevation api request
-    query = "http://maps.googleapis.com/maps/api/elevation/%s?"
-    query = query + "locations="
-    print locations
-    for location in locations:
-        lat = location['lat']
-        lon = location['lng']
-        print location
+    query = "http://maps.googleapis.com/maps/api/elevation/%s?" % (output)
+    query = query + "&sensor=%s" % sensor
+    query = query + "&locations="
+    for location in locations.values:
+        lat = location[0]
+        lon = location[1]
         if query[-1] != "=":
             query = query + "|"
-        query = "%f,%f" % (lat, lon)
-    query = "&sensor=%s" % (output, start['lat'], start['lng'], end['lat'], end['lng'], sensor)
+        query = query + "%f,%f" % (lat, lon)
+    print query
+
     request = urllib2.urlopen(query)
     html = request.read()
     data = json.loads(html)
-    increase = 0
-    results = data['results']
-    # iterate forward, effectively making sequential pairs
-    results = zip(*[iter(results)]*2)
-    for result in results:
-        start_elev = result[0]['elevation']
-        end_elev = result[1]['elevation']
+    return data
+    # increase = 0
+    # results = data['results']
+    # # iterate forward, effectively making sequential pairs
+    # results = zip(*[iter(results)]*2)
+    # for result in results:
+        # start_elev = result[0]['elevation']
+        # end_elev = result[1]['elevation']
         
-    return end_elev - start_elev
+    # return end_elev - start_elev
 
 
 # main loop: loop through different transportation types
 proposals = {}
+points = []
 transit = ['bicycling','walking','driving']
 for method in transit:
     proposals[method] = {}
@@ -67,13 +69,21 @@ for method in transit:
     routes = data['routes']
     for route in routes: # each possible route
         rsumm = route['summary']
-        proposals[method][rsumm] = []
+        proposals[method][rsumm] = [] # steps for this route
         legs = route['legs'] # generally, there will only be one leg
         for leg in legs:
             steps = leg['steps']
-            # print leg['distance']['text']
             for step in steps:
+                # record start, end
                 step_loc = []
                 step_loc.append(step['start_location'])
                 step_loc.append(step['end_location'])
                 proposals[method][rsumm].append(step_loc)
+
+                # keep each point
+                points.append(step['start_location'])
+            points.append(step['end_location']) # add last location, tok
+points = DataFrame(points)
+points.columns = ['lat','lon']
+
+d = elevation_request(points, output, sensor)
