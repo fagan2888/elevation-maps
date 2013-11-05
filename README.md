@@ -10,7 +10,10 @@ routes; ideally, the script would provide alternative routes on its own.
 Using
 -----
 Just run `elevation-maps.py`. Depending on the input address, the elevation API
-request may be too long--this needs to be changed.
+request may be too long--this needs to be changed. Will provide a dictionary
+named `statistics` containing, by mode of transport, all alternate routes with
+corresponding total decrease and increase in elevation, numsteps, and distance
+in meters.
 
 Dependencies
 ------------
