@@ -32,11 +32,12 @@ def elevation_increase(locations, output, sensor):
 
 
 # main loop: loop through different transportation types
+proposals = {}
 transit = ['bicycling','walking','driving']
 for method in transit:
+    proposals[method] = {}
     # # options
     output = "json"
-
     sensor = "false"
 
     # start = raw_input('Start location: ')
@@ -47,9 +48,9 @@ for method in transit:
     end = end.replace(" ", "+")
 
 
-    # definted at https://developers.google.com/maps/documentation/directions/
-    parameters = "origin=columbus+circle,ny"
-    parameters = parameters + "&destination=union+square,ny"
+    # defined at https://developers.google.com/maps/documentation/directions/
+    parameters = "origin=%s" % start
+    parameters = parameters + "&destination=%s" % end
     parameters = parameters + "&sensor=%s" % sensor
     parameters = parameters + "&avoid=highways"
     parameters = parameters + "&travelMode=%s" % method # setting to walking reduces number of alternatives
@@ -64,24 +65,15 @@ for method in transit:
 
     # # Route process
     routes = data['routes']
-    for route in routes:
-        # print route['summary']
-        legs = route['legs']
+    for route in routes: # each possible route
+        rsumm = route['summary']
+        proposals[method][rsumm] = []
+        legs = route['legs'] # generally, there will only be one leg
         for leg in legs:
             steps = leg['steps']
             # print leg['distance']['text']
-            total = 0
-            step_locations = []
             for step in steps:
-                step_locations.append(step['start_location'])
-                step_locations.append(step['end_location'])
-            
-            for location in step_locations:
-                increase = elevation_increase(location, output, sensor)
-                if increase > 0:
-                    total = total + increase
-            # only get positive increases in elevation
-            if increase > 0:
-                total = total + increase
-            # print total
-        print
+                step_loc = []
+                step_loc.append(step['start_location'])
+                step_loc.append(step['end_location'])
+                proposals[method][rsumm].append(step_loc)
