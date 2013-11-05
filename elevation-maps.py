@@ -3,8 +3,8 @@
 import json, urllib2
 from pandas import DataFrame, Series
 import numpy as np
-import pickle
 
+# request the elevation for multiple locations
 def elevation_request(locations, output, sensor):
     # submit elevation api request
     query = "http://maps.googleapis.com/maps/api/elevation/%s?" % (output)
@@ -23,7 +23,7 @@ def elevation_request(locations, output, sensor):
     return data
 
 
-# main loop: loop through different transportation types
+# # main loop: loop through different transportation types, record routes
 proposals = {}
 statistics = {}
 points = []
@@ -65,6 +65,7 @@ for method in transit:
         rsumm = route['summary']
         proposals[method][rsumm] = [] # steps for this route
         statistics[method][rsumm] = {}
+
         legs = route['legs'] # generally, there will only be one leg
         for leg in legs:
             steps = leg['steps']
@@ -75,38 +76,35 @@ for method in transit:
                 step_loc.append(step['start_location'])
                 step_loc.append(step['end_location'])
                 proposals[method][rsumm].append(step_loc)
+                
+                # update distance travelled
                 distance = distance + step['distance']['value']
 
                 # keep each point
                 points.append(step['start_location'])
-            statistics[method][rsumm]['distance'] = distance
             points.append(step['end_location']) # add last location, too
+            
+            # record distance travelled
+            statistics[method][rsumm]['distance'] = distance
+
 points = DataFrame(points)
 points.columns = ['lat','lon']
 step_copy = step
 
+# incorporate elevation information into points dataframe
 elevations = elevation_request(points, output, sensor)
-pickle.dump(elevations, open('elevations.p','wb'))
-pickle.dump(points, open('points.p','wb'))
-pickle.dump(proposals, open('proposals.p','wb'))
-
-elevations = pickle.load(open('elevations.p','rb'))
-points = pickle.load(open('points.p','rb'))
-proposals = pickle.load(open('proposals.p','rb'))
-
 elevations = elevations['results']
-
 points['elevation'] = Series(index=points.index)
-
 for i in np.arange(len(elevations)):
     points.ix[i]['elevation'] = elevations[i]['elevation']
 
-i = 0
+# loop back over all routes
 for mode in proposals.keys():
     for route in proposals[mode].keys():
         numsteps = len(route)
         increase_total = 0
         decrease_total = 0
+
         for step in proposals[mode][route]:
             start_pt = points[np.all([points['lat']==step[0]['lat'],
                                       points['lon']==step[0]['lng']],0)].iloc[0]
@@ -115,6 +113,7 @@ for mode in proposals.keys():
                                     points['lon']==step[1]['lng']],0)].iloc[0]
             end_elev = end_pt['elevation']
 
+            # calculate change in elevation for this step
             diff = end_elev - start_elev
             if diff >= 0: # increase in height
                 increase_total = increase_total + diff
@@ -123,3 +122,4 @@ for mode in proposals.keys():
         statistics[mode][route]['numsteps'] = numsteps
         statistics[mode][route]['increase_total'] = increase_total
         statistics[mode][route]['decrease_total'] = decrease_total
+
