@@ -1,6 +1,6 @@
 # m henry linder, 11/3/13
 # run api request to google maps
-import json, urllib2
+import json, requests
 from pandas import DataFrame, Series
 import numpy as np
 
@@ -17,8 +17,8 @@ def elevation_request(locations, output, sensor):
             query = query + "|"
         query = query + "%f,%f" % (lat, lon)
 
-    request = urllib2.urlopen(query)
-    html = request.read()
+    request = requests.get(query)
+    html = request.text
     data = json.loads(html)
     return data
 
@@ -54,8 +54,8 @@ for method in transit:
     query = ("http://maps.googleapis.com/maps/api/directions/%s?%s") % (output, parameters)
 
     # # Obtain data
-    request = urllib2.urlopen(query)
-    html = request.read()
+    request = requests.get(query)
+    html = request.text
 
     data = json.loads(html)
 
