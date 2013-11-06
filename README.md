@@ -21,4 +21,4 @@ Python:
 * **json** (read data from Google)
 * **numpy** (array manipulation)
 * **pandas** (data manipulation)
-* **urllib2** (download from http)
+* **requests** (download from http)
