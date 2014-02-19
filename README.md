@@ -1,5 +1,5 @@
-Elevation Mapping
-=================
+Elevation-based Direction Mapping
+=================================
 Searches available alternate routes from Google Maps and provides information on
 the corresponding changes in elevation, as well as XY distance travelled and
 number of steps (proxying for number of turns, though this is fuzzy).
