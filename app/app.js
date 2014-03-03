@@ -1,9 +1,10 @@
-var exec = require('child_process').exec,
+var express = require('express'),
+    app = express(),
     http = require('http');
 
-function direct(response) {
-    console.log("Request handler 'direct' was called.");
+app.listen(8000);
 
+app.get('/getopts', function (req, res) {
     var origin = '200+E+66th+St.,+NY+NY',
         destination = '600+Lincoln+Pl.,+Brooklyn+NY',
         mode = 'driving';
@@ -36,18 +37,19 @@ function direct(response) {
 
         res.on('end', function() {
             data = JSON.parse(data);
-            var points = [];
-            dists(data, points, response);
+            dists(data);
         });
     });
 
     req.end();
 
-    function dists(data, points) {
+    function dists(data) {
+        var points = [];
         rs = data.routes;
-        for (i = 0; i < rs.length; i++) {
 
+        for (i = 0; i < rs.length; i++) {
             var route = rs[i];
+
             for (var j = 0; j < route.legs.length; j++) {
 
                 var leg = route.legs[j];
@@ -58,13 +60,7 @@ function direct(response) {
                     points.push(step.start_location);
                 };
                 points.push(step.end_location);
-
-                response.writeHead(200, {'Content-Type': 'text/plain'});
-                response.write(String(points));
-                response.end();
             };
         };
     };
-};
-
-exports.direct = direct;
+});
